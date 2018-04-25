@@ -1,20 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.grumoon.wisp" >
+          package="com.grumoon.wisp">
 
     <application
+        android:name=".WispApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme" >
-        <activity android:name=".MainActivity" >
+        android:theme="@style/AppTheme">
+        <activity android:name=".activity.MainActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+        </activity>
+        <activity android:name=".module.AndFix.AndFixMainActivity">
+        </activity>
+        <activity android:name=".module.AndroidAsyncHttp.AndroidAsyncHttpMainActivity">
+        </activity>
+        <activity android:name=".module.AndroidGifDrawable.AndroidGifDrawableMainActivity">
+        </activity>
+        <activity android:name=".module.Blurry.BlurryMainActivity">
+        </activity>
+        <activity android:name=".module.CircleImageView.CircleImageViewMainActivity">
+        </activity>
+        <activity android:name=".module.EventBus.EventBusMainActivity">
+        </activity>
+        <activity android:name=".module.ExoPlayer.ExoPlayerMainActivity">
+        </activity>
+        <activity android:name=".module.FastJson.FastJsonMainActivity">
+        </activity>
+        <activity android:name=".module.Fresco.FrescoMainActivity">
+        </activity>
+        <activity android:name=".module.Glide.GlideMainActivity">
+        </activity>
+        <activity android:name=".module.Kotlin.KotlinMainActivity">
+        </activity>
+        <activity android:name=".module.Logger.LoggerMainActivity">
+        </activity>
+        <activity android:name=".module.OkHttp.OkHttpMainActivity">
+        </activity>
+        <activity android:name=".module.OkIO.OkIOMainActivity">
+        </activity>
+        <activity android:name=".module.Picasso.PicassoMainActivity">
+        </activity>
+        <activity android:name=".module.PullToRefresh.PullToRefreshMainActivity">
+        </activity>
+        <activity android:name=".module.Retrofit.RetrofitMainActivity">
+        </activity>
+        <activity android:name=".module.RxAndroid.RxAndroidMainActivity">
+        </activity>
+        <activity android:name=".module.SlidingMenu.SlidingMainActivity">
+        </activity>
+        <activity android:name=".module.Tinker.TinkerMainActivity">
+        </activity>
+        <activity android:name=".module.UniversalImageLoader.UniversalImageLoaderMainActivity">
+        </activity>
+        <activity android:name=".module.ViewPagerIndicator.ViewPagerIndicatorMainActivity">
+        </activity>
+        <activity android:name=".module.Volley.VolleyMainActivity">
+        </activity>
+        <activity android:name=".module.Dagger.DaggerMainActivity">
+        </activity>
+        <activity android:name=".module.CameraView.CameraViewMainActivity">
+        </activity>
+        <activity android:name=".module.FFmpeg.FFmpegMainActivity">
+        </activity>
+        <activity android:name=".module.OpenCV.OpenCVMainActivity">
+        </activity>
+        <activity android:name=".module.OpenGL.OpenGLMainActivity">
         </activity>
     </application>
 
