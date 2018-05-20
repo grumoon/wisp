@@ -47,7 +47,7 @@
         </activity>
         <activity android:name=".module.Picasso.PicassoMainActivity">
         </activity>
-        <activity android:name=".module.PullToRefresh.PullToRefreshMainActivity">
+        <activity android:name=".module.UltraPullToRefresh.UltraPullToRefreshMainActivity">
         </activity>
         <activity android:name=".module.Retrofit.RetrofitMainActivity">
         </activity>
