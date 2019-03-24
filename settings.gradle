@@ -1,1 +1,1 @@
-include ':app', 'libCameraView'
+include ':app'
