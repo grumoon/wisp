@@ -5,8 +5,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
+import android.hardware.display.VirtualDisplay;
 import android.media.Image;
 import android.media.ImageReader;
+import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Handler;
@@ -47,9 +49,16 @@ public class CastManager {
     private int mPermissionCode = 0;
     private Intent mPermissionData = null;
 
-    private ImageReader mImageReader;
-
     private Handler mBgHandler;
+
+    private MediaRecorder mMediaRecorder;
+
+    private volatile boolean mScreenshotFlag = false;
+    private volatile boolean mScreenRecordFlag = false;
+
+    private VirtualDisplay mVirtualDisplay;
+
+    private String mCurrentScreenRecordFilePath;
 
     private CastManagerListener mCastManagerListener = null;
 
@@ -92,8 +101,9 @@ public class CastManager {
         mScreenHeight = mContext.getResources().getDisplayMetrics().heightPixels;
         mScreenDensity = mContext.getResources().getDisplayMetrics().densityDpi;
 
-        mInitFlag = true;
+        mMediaRecorder = new MediaRecorder();
 
+        mInitFlag = true;
 
     }
 
@@ -105,12 +115,38 @@ public class CastManager {
         Logger.t(TAG).d("setCapturePermission permissionCode = %d | permissionData = %s", permissionCode, permissionData);
         mPermissionCode = permissionCode;
         mPermissionData = permissionData;
-
-        mMediaProjection = mMediaProjectionManager.getMediaProjection(mPermissionCode, mPermissionData);
     }
 
     public boolean checkCapturePermission() {
-        return mPermissionCode != 0 && mPermissionData != null && mMediaProjection != null;
+        return mPermissionCode != 0 && mPermissionData != null;
+    }
+
+    private void setUpMediaProjection() {
+        mMediaProjection = mMediaProjectionManager.getMediaProjection(mPermissionCode, mPermissionData);
+    }
+
+    private void tearDownMediaProjection() {
+        if (mMediaProjection != null) {
+            mMediaProjection.stop();
+            mMediaProjection = null;
+        }
+    }
+
+    private void prepareRecorder() {
+        mCurrentScreenRecordFilePath = StorageUtils.getCaptureDir() + File.separatorChar + System.currentTimeMillis() + ".mp4";
+        File file = new File(mCurrentScreenRecordFilePath);
+        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        mMediaRecorder.setOutputFile(file.getAbsolutePath());
+        mMediaRecorder.setVideoSize(mScreenWidth, mScreenHeight);
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+        mMediaRecorder.setVideoEncodingBitRate(5 * 1024 * 1024);
+        mMediaRecorder.setVideoFrameRate(30);
+        try {
+            mMediaRecorder.prepare();
+        } catch (Exception e) {
+            Logger.t(TAG).e("prepareRecorder e = " + e);
+        }
     }
 
 
@@ -124,6 +160,34 @@ public class CastManager {
             Logger.t(TAG).d("startRecord permission info not set");
             return;
         }
+
+        if (mScreenRecordFlag) {
+            Logger.t(TAG).d("startRecord repetitive operation");
+            return;
+        }
+
+        mScreenRecordFlag = true;
+
+        try {
+            prepareRecorder();
+            setUpMediaProjection();
+            mVirtualDisplay = mMediaProjection.createVirtualDisplay(
+                    "MainScreen",
+                    mScreenWidth,
+                    mScreenHeight,
+                    mScreenDensity,
+                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                    mMediaRecorder.getSurface(),
+                    null, null);
+
+            mMediaRecorder.start();
+        } catch (Exception e) {
+            Logger.t(TAG).e("startRecord e = " + e);
+            if (mCastManagerListener != null) {
+                mCastManagerListener.onRecordScreenResult(-1, null);
+            }
+            mScreenRecordFlag = false;
+        }
     }
 
     public void stopRecord() {
@@ -136,6 +200,16 @@ public class CastManager {
             Logger.t(TAG).d("stopRecord permission info not set");
             return;
         }
+
+        mMediaRecorder.stop();
+        mMediaRecorder.reset();
+        mVirtualDisplay.release();
+        tearDownMediaProjection();
+
+        if (mCastManagerListener != null) {
+            mCastManagerListener.onRecordScreenResult(0, mCurrentScreenRecordFilePath);
+        }
+        mScreenRecordFlag = false;
     }
 
     public void screenshot() {
@@ -149,8 +223,16 @@ public class CastManager {
             return;
         }
 
+        if (mScreenshotFlag) {
+            Logger.t(TAG).d("screenshot repetitive operation");
+            return;
+        }
 
-        mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, 2);
+        mScreenshotFlag = true;
+
+        setUpMediaProjection();
+
+        ImageReader imageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, 2);
 
         mMediaProjection.createVirtualDisplay(
                 "screen-mirror",
@@ -158,15 +240,15 @@ public class CastManager {
                 mScreenHeight,
                 mScreenDensity,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                mImageReader.getSurface(),
+                imageReader.getSurface(),
                 null,
                 null);
 
-        mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
-            public void onImageAvailable(ImageReader mImageReader) {
+            public void onImageAvailable(ImageReader reader) {
 
-                try (Image image = mImageReader.acquireLatestImage()) {
+                try (Image image = reader.acquireLatestImage()) {
                     if (image != null) {
                         final Image.Plane[] planes = image.getPlanes();
                         if (planes.length > 0) {
@@ -212,10 +294,14 @@ public class CastManager {
                     }
                     Logger.t(TAG).e("onImageAvailable e = " + e);
                 } finally {
-                    if (mImageReader != null) {
-                        mImageReader.close();
-                        mImageReader.setOnImageAvailableListener(null, null);
+                    if (reader != null) {
+                        reader.close();
+                        reader.setOnImageAvailableListener(null, null);
                     }
+
+                    tearDownMediaProjection();
+
+                    mScreenshotFlag = false;
                 }
 
             }

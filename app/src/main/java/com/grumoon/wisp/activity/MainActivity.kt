@@ -70,9 +70,9 @@ class MainActivity : BaseActivity() {
             override fun onRecordScreenResult(retCode: Int, videoSavePath: String?) {
                 Logger.t(TAG).d("onRecordScreenResult retCode = $retCode | videoSavePath = $videoSavePath")
                 if (retCode == 0) {
-
+                    showToast("录屏完成，视频存储地址 $videoSavePath")
                 } else {
-
+                    showToast("录屏失败，错误码 $retCode")
                 }
             }
         })
@@ -80,6 +80,7 @@ class MainActivity : BaseActivity() {
 
 
     private fun startRecord() {
+        showToast("开始录屏...")
         CastManager.getInstance().startRecord()
     }
 
