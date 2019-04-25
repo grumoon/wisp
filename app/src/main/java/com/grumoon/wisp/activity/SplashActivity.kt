@@ -36,6 +36,7 @@ open class SplashActivity : BaseActivity() {
         setContentView(R.layout.activity_splash)
 
         mPermissionMap[Manifest.permission.WRITE_EXTERNAL_STORAGE] = "读写SD卡"
+        mPermissionMap[Manifest.permission.CAMERA] = "摄像头"
         mPermissionMap[Manifest.permission.RECORD_AUDIO] = "录音"
 
         // 申请权限

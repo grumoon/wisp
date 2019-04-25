@@ -18,6 +18,8 @@ public class StorageUtils {
 
     private static final String CAPTURE = WISP_ROOT + File.separatorChar + "capture";
 
+    private static final String CAMERA = WISP_ROOT + File.separatorChar + "camera";
+
     public static final String getTempDir() {
         File path = new File(TEMP);
         if (!path.exists()) {
@@ -48,5 +50,13 @@ public class StorageUtils {
             path.mkdirs();
         }
         return CAPTURE;
+    }
+
+    public static final String getCameraDir() {
+        File path = new File(CAMERA);
+        if (!path.exists()) {
+            path.mkdirs();
+        }
+        return CAMERA;
     }
 }
